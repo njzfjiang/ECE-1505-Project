@@ -54,7 +54,7 @@ def generate_data(n, d, cond_number, sparsity, noise_level, struct='iid'):
         # For Toeplitz(ρ^|i-j|), condition number ≈ (1+ρ)/(1-ρ)
         # Solve for ρ: cond_number = (1+ρ)/(1-ρ)
         rho = (cond_number - 1) / (cond_number + 1)
-        
+        rho = np.clip(rho, 0.0, 0.9999)
         # Create first row of Toeplitz matrix
         row = rho ** np.arange(d)
         cov_matrix = toeplitz(row)
@@ -74,6 +74,9 @@ def generate_data(n, d, cond_number, sparsity, noise_level, struct='iid'):
     else:
         k = int(sparsity)
     
+    if k < 0 or k > d:
+        raise ValueError(f"sparsity leads to k={k} nonzeros, which is outside [0, d={d}]")
+
     x_true = np.zeros(d)
     # Randomly choose support
     support = np.random.choice(d, size=k, replace=False)
@@ -84,3 +87,4 @@ def generate_data(n, d, cond_number, sparsity, noise_level, struct='iid'):
     b = A @ x_true + noise_level * np.random.randn(n)
     
     return A, b, x_true
+
