@@ -6,24 +6,6 @@ def soft_thresholding(x, threshold):
     """
     return np.sign(x) * np.maximum(np.abs(x) - threshold, 0.)
 
-def objective(X, y, w, lambda_param):
-    """
-    Compute the LASSO objective function value.
-    """
-    residual = X @ w - y
-    return 0.5 * np.sum(residual**2) + lambda_param * np.sum(np.abs(w))
-
-def sparsity(w):
-    """
-    Compute the sparsity of the weight vector w.
-    """
-    return np.sum(np.abs(w) > 1e-6)
-
-def residual_norm(X, y, w):
-    """
-    Compute the L2 norm of the residual (Xw - y).
-    """
-    return np.linalg.norm(X @ w - y)
 
 def ista_lasso(X, y, lambda_param, w0, iters, learning_rate, callback=None):
     """
@@ -175,6 +157,7 @@ def admm_lasso(X, y, lambda_param, w0, iters, rho, callback=None):
     L = np.linalg.cholesky(A)
 
     for i in range(iters):
+        z_prev = z.copy()
         rhs = X_T_y + rho * (z - u)
         w = np.linalg.solve(L.T, np.linalg.solve(L, rhs))
         # w-update: minimize (1/2)||Xw - y||^2 + (rho/2)||w - z + u||^2
@@ -183,12 +166,18 @@ def admm_lasso(X, y, lambda_param, w0, iters, rho, callback=None):
         # z-update: minimize lambda_param * ||z||_1 + (rho/2)||w - z + u||^2
         z = soft_thresholding(w + u, lambda_param / rho)
 
+        # compute residuals before updating u
+        primal_residual = np.linalg.norm(w - z)
+        dual_residual = rho * np.linalg.norm(z - z_prev)
+
         # u-update: dual variable update
         u += w - z
 
         # Call the callback function if provided
         if callback is not None:
-            stop_flag = callback(i, X, y, lambda_param, w)
+            stop_flag = callback(i, X, y, lambda_param, w,
+                                 primal_residual=primal_residual,
+                                 dual_residual=dual_residual)
             if stop_flag:
                 break
 
