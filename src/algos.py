@@ -1,22 +1,4 @@
 import numpy as np
-import time
-
-class Recorder:
-    """
-    A simple class to record the history of optimization.
-    """
-    def __init__(self):
-        self.history = []
-        self.t0 = time.perf_counter()
-
-    def record(self, iteration, X, y, lambda_param, w):
-        objective_value = objective(X, y, w, lambda_param)
-        sparsity_value = sparsity(w)
-        residual_value = residual_norm(X, y, w)
-        timestamp = time.perf_counter() - self.t0
-
-        self.history.append((iteration, objective_value, sparsity_value, residual_value, timestamp))
-
 
 def soft_thresholding(x, threshold):
     """
@@ -35,7 +17,7 @@ def sparsity(w):
     """
     Compute the sparsity of the weight vector w.
     """
-    return np.sum(w == 0) / len(w)
+    return np.sum(np.abs(w) > 1e-6)
 
 def residual_norm(X, y, w):
     """
@@ -89,7 +71,9 @@ def ista_lasso(X, y, lambda_param, w0, iters, learning_rate, callback=None):
 
         # Call the callback function if provided
         if callback is not None:
-            callback(i, X, y, lambda_param, w)
+            stop_flag = callback(i, X, y, lambda_param, w)
+            if stop_flag:
+                break
 
     return w
 
@@ -148,8 +132,9 @@ def fista_lasso(X, y, lambda_param, w0, iters, learning_rate, callback=None):
 
         # Call the callback function if provided
         if callback is not None:
-            callback(i, X, y, lambda_param, w)
-
+            stop_flag = callback(i, X, y, lambda_param, w)
+            if stop_flag:
+                break
     return w
 
 
@@ -203,6 +188,8 @@ def admm_lasso(X, y, lambda_param, w0, iters, rho, callback=None):
 
         # Call the callback function if provided
         if callback is not None:
-            callback(i, X, y, lambda_param, w)
+            stop_flag = callback(i, X, y, lambda_param, w)
+            if stop_flag:
+                break
 
     return w
