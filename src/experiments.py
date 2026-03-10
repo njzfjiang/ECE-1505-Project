@@ -155,6 +155,7 @@ def run_RQ1(num_trials=5):
         obj_vals = np.array([h['obj'][:min_len] for h in histories])
         time_mean = np.mean(time_vals, axis=0)
         obj_mean = np.mean(obj_vals, axis=0)
+        obj_std = np.std(obj_vals, axis=0)  # 补这一行
         plt.plot(time_mean, obj_mean, label=name)
         plt.fill_between(time_mean, obj_mean-obj_std, obj_mean+obj_std, alpha=0.2)
     plt.xlabel('Time (s)')
