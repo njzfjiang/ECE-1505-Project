@@ -10,4 +10,4 @@ ECE 1505 project
 
 3. Run plots.py to generate plots for the data(make sure all experiments has been ran)
 
-4. For real data experiment, run ```python experiments_real.py``` to create the data and create the plots
+4. For real data experiment, run ```python experiments_real.py``` to create the data and the plots
